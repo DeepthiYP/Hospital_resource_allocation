@@ -1,0 +1,2 @@
+request_id,patient_id,request_date,ward_type,stay_days,oxygen,ventilator,isolation,status,reason
+REQ001,P001,2026-08-28,Icu,10,Yes,Yes,Yes,Waiting,"No suitable bed is currently available and no matching future bed was found. The request requires an exact match for ward=Icu, oxygen=True, ventilator=True, isolation=True, and stay=10 days."

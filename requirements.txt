@@ -1,0 +1,12 @@
+flask
+fastapi
+uvicorn
+requests
+pandas
+numpy
+tensorflow
+scikit-learn
+pypdf
+python-multipart
+pillow
+pytesseract

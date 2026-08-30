@@ -1,0 +1,21 @@
+text,ward_type,stay_days,oxygen,ventilator,isolation
+Patient requires general ward admission for three days,General,3,No,No,No
+Patient requires general ward monitoring for five days,General,5,No,No,No
+Patient requires general ward observation,General,2,No,No,No
+Patient needs general ward admission for four days,General,4,No,No,No
+Patient requires ICU admission for four days,ICU,4,Yes,No,No
+Patient needs intensive care monitoring,ICU,5,Yes,No,No
+Patient requires ICU observation with oxygen support,ICU,3,Yes,No,No
+Patient requires intensive care for seven days,ICU,7,Yes,No,No
+Patient needs ventilator support in ICU,ICU,10,Yes,Yes,No
+Patient requires ventilator and intensive care,ICU,8,Yes,Yes,No
+Patient needs mechanical ventilation,ICU,6,Yes,Yes,No
+Patient requires ICU ventilator support,ICU,5,Yes,Yes,No
+Patient requires isolation for five days,Isolation,5,Yes,No,Yes
+Patient needs an isolation room,Isolation,3,No,No,Yes
+Patient requires isolation and oxygen support,Isolation,7,Yes,No,Yes
+Patient requires infectious disease isolation,Isolation,5,Yes,No,Yes
+Patient requires a private room for two days,Private,2,No,No,No
+Patient needs private room admission,Private,4,No,No,No
+Patient requires premium private room,Private,3,Yes,No,No
+Patient needs a private room for five days,Private,5,No,No,No

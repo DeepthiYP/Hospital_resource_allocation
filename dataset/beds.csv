@@ -1,0 +1,13 @@
+bed_id,room_id,ward_type,bed_type,status,oxygen,ventilator,isolation
+B001,R101,General,Standard,Occupied,No,No,No
+B002,R101,General,Standard,Available,No,No,No
+B003,R102,General,Standard,Available,Yes,No,No
+B004,R201,ICU,ICU,Occupied,Yes,Yes,No
+B005,R201,ICU,ICU,Available,Yes,Yes,No
+B006,R202,ICU,ICU,Available,Yes,No,No
+B007,R301,Isolation,Isolation,Occupied,Yes,No,Yes
+B008,R301,Isolation,Isolation,Available,Yes,No,Yes
+B009,R302,Isolation,Isolation,Available,Yes,Yes,Yes
+B010,R401,Private,Premium,Available,Yes,No,No
+B011,R401,Private,Premium,Occupied,Yes,No,No
+B012,R402,Private,Premium,Available,Yes,No,No

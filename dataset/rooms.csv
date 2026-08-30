@@ -1,0 +1,9 @@
+room_id,ward_type,room_type,total_beds,floor
+R101,General,Shared,2,1
+R102,General,Shared,1,1
+R201,ICU,ICU,2,2
+R202,ICU,ICU,1,2
+R301,Isolation,Isolation,2,3
+R302,Isolation,Isolation,1,3
+R401,Private,Private,2,4
+R402,Private,Private,1,4

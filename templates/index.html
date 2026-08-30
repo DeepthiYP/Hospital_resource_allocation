@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Hospital Resource Allocation System
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+
+<body>
+
+<!-- ============================= -->
+<!-- HEADER -->
+<!-- ============================= -->
+
+<header class="topbar">
+
+    <div class="header-content">
+
+        <h1>
+            Hospital Resource Allocation System
+        </h1>
+
+        <p>
+            AI-assisted doctor document analysis
+            and intelligent hospital resource allocation
+        </p>
+
+    </div>
+
+
+    <div class="api-badge">
+
+        Flask + FastAPI + BiLSTM
+
+    </div>
+
+</header>
+
+
+
+<main class="container">
+
+
+    <!-- ============================= -->
+    <!-- DASHBOARD STATISTICS -->
+    <!-- ============================= -->
+
+    <section class="dashboard-grid">
+
+
+        <div class="stat-card">
+
+            <span>
+                Total Beds
+            </span>
+
+            <strong>
+                {{ summary.total_beds }}
+            </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>
+                Occupied Beds
+            </span>
+
+            <strong>
+                {{ summary.occupied_beds }}
+            </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>
+                Available Beds
+            </span>
+
+            <strong>
+                {{ summary.available_beds }}
+            </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>
+                Occupancy Rate
+            </span>
+
+            <strong>
+                {{ summary.occupancy_rate }}%
+            </strong>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- ============================= -->
+    <!-- DOCUMENT UPLOAD -->
+    <!-- ============================= -->
+
+    <section class="card upload-card">
+
+
+        <div class="section-title">
+
+            <div>
+
+                <h2>
+                    Doctor Document Analysis
+                </h2>
+
+                <p>
+                    Upload a doctor's prescription or
+                    admission note to analyze resource
+                    requirements.
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <form id="uploadForm"
+              enctype="multipart/form-data">
+
+
+            <div class="form-grid">
+
+
+                <!-- PATIENT ID -->
+
+                <div class="field">
+
+                    <label for="patient_id">
+
+                        Patient ID
+
+                    </label>
+
+
+                    <input
+
+                        type="text"
+
+                        id="patient_id"
+
+                        name="patient_id"
+
+                        placeholder="Example: P007"
+
+                        required
+
+                    >
+
+                </div>
+
+
+
+                <!-- DOCUMENT -->
+
+                <div class="field">
+
+                    <label for="document">
+
+                        Doctor Document
+
+                    </label>
+
+
+                    <input
+
+                        type="file"
+
+                        id="document"
+
+                        name="document"
+
+                        accept=".pdf,.png,.jpg,.jpeg,.txt"
+
+                        required
+
+                    >
+
+                </div>
+
+
+            </div>
+
+
+
+            <button
+
+                type="submit"
+
+                id="analyzeBtn"
+
+            >
+
+                Analyze & Allocate Resource
+
+            </button>
+
+
+        </form>
+
+
+
+        <!-- LOADING -->
+
+        <div id="loading"
+             class="loading hidden">
+
+            <div class="spinner"></div>
+
+            <span>
+
+                Analyzing document and checking
+                hospital resources...
+
+            </span>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- ============================= -->
+    <!-- RESULT -->
+    <!-- ============================= -->
+
+    <section id="result"
+             class="card result-card">
+
+
+        <div class="empty-state">
+
+
+            <div class="empty-icon">
+
+                🏥
+
+            </div>
+
+
+            <h2>
+
+                Resource Recommendation
+
+            </h2>
+
+
+            <p>
+
+                Upload a doctor document to see
+                extracted requirements and the
+                recommended hospital resource.
+
+            </p>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- ============================= -->
+    <!-- WARD STATUS -->
+    <!-- ============================= -->
+
+    <section class="card">
+
+
+        <div class="section-title">
+
+            <div>
+
+                <h2>
+
+                    Current Ward Status
+
+                </h2>
+
+
+                <p>
+
+                    Overview of hospital resources
+                    by ward.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="table-wrap">
+
+
+            <table>
+
+
+                <thead>
+
+                    <tr>
+
+                        {% if wards %}
+
+                            {% for key in wards[0].keys() %}
+
+                                <th>
+
+                                    {{ key.replace('_', ' ')|title }}
+
+                                </th>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            <th>Ward</th>
+
+                            <th>Total</th>
+
+                            <th>Occupied</th>
+
+                            <th>Available</th>
+
+                        {% endif %}
+
+                    </tr>
+
+                </thead>
+
+
+
+                <tbody>
+
+
+                    {% if wards %}
+
+
+                        {% for row in wards %}
+
+
+                            <tr>
+
+
+                                {% for value in row.values() %}
+
+                                    <td>
+
+                                        {{ value }}
+
+                                    </td>
+
+                                {% endfor %}
+
+
+                            </tr>
+
+
+                        {% endfor %}
+
+
+                    {% else %}
+
+
+                        <tr>
+
+                            <td colspan="4">
+
+                                No ward data available.
+
+                            </td>
+
+                        </tr>
+
+
+                    {% endif %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- ============================= -->
+    <!-- OCCUPIED BEDS -->
+    <!-- ============================= -->
+
+    <section class="card">
+
+
+        <div class="section-title">
+
+            <div>
+
+                <h2>
+
+                    Occupied Beds
+
+                </h2>
+
+
+                <p>
+
+                    Current occupancy and expected
+                    discharge information.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="table-wrap">
+
+
+            <table>
+
+
+                <thead>
+
+
+                    <tr>
+
+
+                        {% if occupied %}
+
+
+                            {% for key in occupied[0].keys() %}
+
+                                <th>
+
+                                    {{ key.replace('_', ' ')|title }}
+
+                                </th>
+
+                            {% endfor %}
+
+
+                        {% else %}
+
+
+                            <th>Bed</th>
+
+                            <th>Patient</th>
+
+                            <th>Ward</th>
+
+                            <th>Expected Discharge</th>
+
+
+                        {% endif %}
+
+
+                    </tr>
+
+
+                </thead>
+
+
+
+                <tbody>
+
+
+                    {% if occupied %}
+
+
+                        {% for row in occupied %}
+
+
+                            <tr>
+
+
+                                {% for value in row.values() %}
+
+                                    <td>
+
+                                        {{ value }}
+
+                                    </td>
+
+                                {% endfor %}
+
+
+                            </tr>
+
+
+                        {% endfor %}
+
+
+                    {% else %}
+
+
+                        <tr>
+
+                            <td colspan="4">
+
+                                No occupied beds found.
+
+                            </td>
+
+                        </tr>
+
+
+                    {% endif %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+
+<!-- ============================= -->
+<!-- FOOTER -->
+<!-- ============================= -->
+
+<footer>
+
+    <p>
+
+        Hospital Resource Allocation System
+        • AI-assisted resource recommendation
+
+    </p>
+
+</footer>
+
+
+
+<!-- ============================= -->
+<!-- JAVASCRIPT -->
+<!-- ============================= -->
+
+<script>
+
+
+const form =
+    document.getElementById(
+        "uploadForm"
+    );
+
+
+const result =
+    document.getElementById(
+        "result"
+    );
+
+
+const loading =
+    document.getElementById(
+        "loading"
+    );
+
+
+const analyzeBtn =
+    document.getElementById(
+        "analyzeBtn"
+    );
+
+
+
+/*
+    Prevent HTML injection
+*/
+function escapeHTML(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        value ?? "";
+
+    return div.innerHTML;
+
+}
+
+
+
+/*
+    FORM SUBMISSION
+*/
+
+form.addEventListener(
+    "submit",
+    async function(event) {
+
+
+        event.preventDefault();
+
+
+        const formData =
+            new FormData(form);
+
+
+
+        /*
+            SHOW LOADING
+        */
+
+        loading.classList.remove(
+            "hidden"
+        );
+
+
+        analyzeBtn.disabled =
+            true;
+
+
+        analyzeBtn.textContent =
+            "Analyzing...";
+
+
+
+        result.innerHTML = `
+
+            <div class="processing">
+
+                <div class="spinner large"></div>
+
+                <h2>
+
+                    Processing Doctor Document
+
+                </h2>
+
+                <p>
+
+                    Extracting medical requirements
+                    and checking hospital resources...
+
+                </p>
+
+            </div>
+
+        `;
+
+
+
+        try {
+
+
+            /*
+                SEND DOCUMENT TO FLASK
+            */
+
+            const response =
+                await fetch(
+                    "/analyze",
+                    {
+
+                        method: "POST",
+
+                        body: formData
+
+                    }
+                );
+
+
+
+            const data =
+                await response.json();
+
+
+
+            /*
+                ERROR
+            */
+
+            if (
+                !response.ok ||
+                data.error
+            ) {
+
+                throw new Error(
+
+                    data.error ||
+                    data.details ||
+                    "Request failed."
+
+                );
+
+            }
+
+
+
+            /*
+                GET DATA
+            */
+
+            const requirements =
+                data.requirements || {};
+
+
+            const allocation =
+                data.allocation || {};
+
+
+
+            /*
+                RESULT HEADER
+            */
+
+            let resultHTML = `
+
+
+                <div class="result-header">
+
+
+                    <div>
+
+                        <span class="eyebrow">
+
+                            AI ANALYSIS COMPLETE
+
+                        </span>
+
+
+                        <h2>
+
+                            Resource Recommendation
+
+                        </h2>
+
+                    </div>
+
+
+
+                    <span class="status-pill
+
+                        ${
+                            allocation.status ===
+                            "AVAILABLE"
+
+                            ? "available"
+
+                            :
+
+                            allocation.status ===
+                            "FUTURE_AVAILABLE"
+
+                            ? "future"
+
+                            :
+
+                            "waiting"
+
+                        }
+
+                    ">
+
+                        ${
+                            escapeHTML(
+                                allocation.status ||
+                                "PROCESSED"
+                            )
+                        }
+
+                    </span>
+
+
+                </div>
+
+
+
+                <!-- REQUIREMENTS -->
+
+                <div class="requirement-grid">
+
+
+                    <div class="info-box">
+
+                        <span>
+
+                            Ward Required
+
+                        </span>
+
+                        <strong>
+
+                            ${
+                                escapeHTML(
+                                    requirements.ward_type
+                                )
+                            }
+
+                        </strong>
+
+                    </div>
+
+
+
+                    <div class="info-box">
+
+                        <span>
+
+                            Stay Duration
+
+                        </span>
+
+                        <strong>
+
+                            ${
+                                escapeHTML(
+                                    requirements.stay_days
+                                )
+                            }
+
+                            days
+
+                        </strong>
+
+                    </div>
+
+
+
+                    <div class="info-box">
+
+                        <span>
+
+                            Oxygen
+
+                        </span>
+
+                        <strong>
+
+                            ${
+                                requirements.oxygen
+                                ? "Required"
+                                : "Not Required"
+                            }
+
+                        </strong>
+
+                    </div>
+
+
+
+                    <div class="info-box">
+
+                        <span>
+
+                            Ventilator
+
+                        </span>
+
+                        <strong>
+
+                            ${
+                                requirements.ventilator
+                                ? "Required"
+                                : "Not Required"
+                            }
+
+                        </strong>
+
+                    </div>
+
+
+
+                    <div class="info-box">
+
+                        <span>
+
+                            Isolation
+
+                        </span>
+
+                        <strong>
+
+                            ${
+                                requirements.isolation
+                                ? "Required"
+                                : "Not Required"
+                            }
+
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="divider"></div>
+
+            `;
+
+
+
+            /*
+                CASE 1
+                CURRENT BED AVAILABLE
+            */
+
+            if (
+                allocation.status ===
+                "AVAILABLE"
+            ) {
+
+
+                resultHTML += `
+
+
+                    <div class="allocation success-box">
+
+
+                        <div class="allocation-title">
+
+
+                            <span class="big-check">
+
+                                ✓
+
+                            </span>
+
+
+                            <div>
+
+                                <h3>
+
+                                    Bed Recommended
+
+                                </h3>
+
+
+                                <p>
+
+                                    All required resource
+                                    conditions are satisfied.
+
+                                </p>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="allocation-grid">
+
+
+                            <div>
+
+                                <span>
+
+                                    Bed
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.bed_id
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Room
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.room_id
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Ward
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.ward_type
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Match Score
+
+                                </span>
+
+                                <strong class="score">
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.match_score
+                                        )
+                                    }%
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Allocation Start
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.allocation_start
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Expected Release
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.expected_release_date
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <p class="message">
+
+                            ${
+                                escapeHTML(
+                                    allocation.message
+                                )
+                            }
+
+                        </p>
+
+
+                    </div>
+
+
+                `;
+
+
+            }
+
+
+
+            /*
+                CASE 2
+                FUTURE BED
+            */
+
+            else if (
+                allocation.status ===
+                "FUTURE_AVAILABLE"
+            ) {
+
+
+                resultHTML += `
+
+
+                    <div class="allocation warning-box">
+
+
+                        <div class="allocation-title">
+
+
+                            <span class="big-check">
+
+                                !
+
+                            </span>
+
+
+                            <div>
+
+                                <h3>
+
+                                    No Suitable Bed Available Now
+
+                                </h3>
+
+
+                                <p>
+
+                                    A matching resource is
+                                    expected to become available.
+
+                                </p>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="allocation-grid">
+
+
+                            <div>
+
+                                <span>
+
+                                    Future Bed
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.bed_id
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Room
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.room_id
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Available On
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.available_date
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Days Until Available
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.days_until_available
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Required Stay
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.stay_days
+                                        )
+                                    }
+
+                                    days
+
+                                </strong>
+
+                            </div>
+
+
+
+                            <div>
+
+                                <span>
+
+                                    Expected Release
+
+                                </span>
+
+                                <strong>
+
+                                    ${
+                                        escapeHTML(
+                                            allocation.expected_release_date
+                                        )
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <p class="message">
+
+                            ${
+                                escapeHTML(
+                                    allocation.message
+                                )
+                            }
+
+                        </p>
+
+
+                    </div>
+
+
+                `;
+
+
+            }
+
+
+
+            /*
+                CASE 3
+                WAITING LIST
+            */
+
+            else {
+
+
+                resultHTML += `
+
+
+                    <div class="allocation danger-box">
+
+
+                        <div class="allocation-title">
+
+
+                            <span class="big-check">
+
+                                ×
+
+                            </span>
+
+
+                            <div>
+
+                                <h3>
+
+                                    Patient Added to Waiting List
+
+                                </h3>
+
+
+                                <p>
+
+                                    No suitable current or future
+                                    resource was found.
+
+                                </p>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="waiting-id">
+
+                            Waiting List ID:
+
+                            <strong>
+
+                                ${
+                                    escapeHTML(
+                                        allocation.waiting_request_id
+                                    )
+                                }
+
+                            </strong>
+
+                        </div>
+
+
+
+                        <p class="message">
+
+                            ${
+                                escapeHTML(
+                                    allocation.message
+                                )
+                            }
+
+                        </p>
+
+
+                    </div>
+
+
+                `;
+
+            }
+
+
+
+            /*
+                DISPLAY RESULT
+            */
+
+            result.innerHTML =
+                resultHTML;
+
+
+        }
+
+
+        catch(error) {
+
+
+            result.innerHTML = `
+
+
+                <div class="danger-box">
+
+
+                    <h2>
+
+                        Processing Error
+
+                    </h2>
+
+
+                    <p>
+
+                        ${
+                            escapeHTML(
+                                error.message
+                            )
+                        }
+
+                    </p>
+
+
+                    <p class="small-text">
+
+                        Make sure FastAPI is running
+                        on port 8000 and Flask is
+                        running on port 5000.
+
+                    </p>
+
+
+                </div>
+
+
+            `;
+
+        }
+
+
+        finally {
+
+
+            loading.classList.add(
+                "hidden"
+            );
+
+
+            analyzeBtn.disabled =
+                false;
+
+
+            analyzeBtn.textContent =
+                "Analyze & Allocate Resource";
+
+
+        }
+
+
+    }
+
+);
+
+
+</script>
+
+
+</body>
+
+</html>

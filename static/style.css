@@ -1,0 +1,1008 @@
+/* =========================================
+   GLOBAL
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+
+    margin: 0;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #f4f7fb;
+
+    color: #172033;
+
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.topbar {
+
+    background: #123b5d;
+
+    color: white;
+
+    padding:
+        26px 7%;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 20px;
+
+}
+
+
+.header-content h1 {
+
+    margin:
+        0 0 7px;
+
+    font-size: 28px;
+
+}
+
+
+.header-content p {
+
+    margin: 0;
+
+    opacity: 0.88;
+
+    font-size: 14px;
+
+}
+
+
+.api-badge {
+
+    background:
+        rgba(255, 255, 255, 0.14);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.25);
+
+    padding:
+        10px 15px;
+
+    border-radius: 20px;
+
+    font-size: 13px;
+
+    white-space: nowrap;
+
+}
+
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.container {
+
+    width:
+        min(1120px, 92%);
+
+    margin:
+        28px auto 50px;
+
+}
+
+
+/* =========================================
+   DASHBOARD CARDS
+========================================= */
+
+.dashboard-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 16px;
+
+    margin-bottom: 22px;
+
+}
+
+
+.stat-card {
+
+    background: white;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 14px;
+
+    padding: 20px;
+
+    box-shadow:
+        0 5px 18px
+        rgba(25, 50, 75, 0.06);
+
+}
+
+
+.stat-card span {
+
+    display: block;
+
+    color: #65748b;
+
+    font-size: 13px;
+
+    margin-bottom: 7px;
+
+}
+
+
+.stat-card strong {
+
+    font-size: 28px;
+
+    color: #123b5d;
+
+}
+
+
+/* =========================================
+   GENERAL CARD
+========================================= */
+
+.card {
+
+    background: white;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 5px 18px
+        rgba(25, 50, 75, 0.06);
+
+    padding: 25px;
+
+    margin-bottom: 22px;
+
+}
+
+
+/* =========================================
+   SECTION TITLE
+========================================= */
+
+.section-title {
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items: center;
+
+    margin-bottom: 20px;
+
+}
+
+
+.section-title h2 {
+
+    margin:
+        0 0 6px;
+
+    color: #123b5d;
+
+}
+
+
+.section-title p {
+
+    margin: 0;
+
+    color: #69778a;
+
+    font-size: 14px;
+
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.form-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 2fr;
+
+    gap: 18px;
+
+}
+
+
+.field label {
+
+    display: block;
+
+    font-weight: 700;
+
+    margin-bottom: 8px;
+
+    color: #26384c;
+
+}
+
+
+input[type="text"],
+input[type="file"] {
+
+    width: 100%;
+
+    padding: 13px;
+
+    border:
+        1px solid #ccd5e0;
+
+    border-radius: 8px;
+
+    background: white;
+
+    font-size: 14px;
+
+}
+
+
+input:focus {
+
+    outline:
+        2px solid #b8d8ed;
+
+    border-color:
+        #377aa7;
+
+}
+
+
+/* =========================================
+   BUTTON
+========================================= */
+
+button {
+
+    margin-top: 20px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    padding:
+        13px 22px;
+
+    background: #176b91;
+
+    color: white;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+    transition:
+        background 0.2s ease,
+        transform 0.1s ease;
+
+}
+
+
+button:hover {
+
+    background: #125876;
+
+}
+
+
+button:active {
+
+    transform:
+        translateY(1px);
+
+}
+
+
+button:disabled {
+
+    opacity: 0.65;
+
+    cursor: wait;
+
+}
+
+
+/* =========================================
+   RESULT CARD
+========================================= */
+
+.result-card {
+
+    min-height: 230px;
+
+}
+
+
+.empty-state {
+
+    text-align: center;
+
+    padding:
+        30px 10px;
+
+    color: #69778a;
+
+}
+
+
+.empty-icon {
+
+    font-size: 42px;
+
+    margin-bottom: 10px;
+
+}
+
+
+.empty-state h2 {
+
+    color: #123b5d;
+
+}
+
+
+/* =========================================
+   RESULT HEADER
+========================================= */
+
+.result-header {
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+}
+
+
+.result-header h2 {
+
+    margin:
+        5px 0 0;
+
+}
+
+
+.eyebrow {
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: 1px;
+
+    color: #176b91;
+
+}
+
+
+/* =========================================
+   STATUS
+========================================= */
+
+.status-pill {
+
+    padding:
+        8px 13px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+}
+
+
+.status-pill.available {
+
+    background: #dff4e7;
+
+    color: #17663a;
+
+}
+
+
+.status-pill.future {
+
+    background: #fff0c9;
+
+    color: #805b00;
+
+}
+
+
+.status-pill.waiting {
+
+    background: #fbe0e0;
+
+    color: #8c2525;
+
+}
+
+
+/* =========================================
+   REQUIREMENT GRID
+========================================= */
+
+.requirement-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 12px;
+
+    margin-top: 20px;
+
+}
+
+
+.info-box {
+
+    padding: 14px;
+
+    background: #f7fafc;
+
+    border:
+        1px solid #e5ebf1;
+
+    border-radius: 9px;
+
+}
+
+
+.info-box span {
+
+    display: block;
+
+    color: #65748b;
+
+    font-size: 13px;
+
+    margin-bottom: 7px;
+
+}
+
+
+.info-box strong {
+
+    color: #1c3147;
+
+    font-size: 15px;
+
+}
+
+
+/* =========================================
+   DIVIDER
+========================================= */
+
+.divider {
+
+    height: 1px;
+
+    background: #e7edf3;
+
+    margin:
+        24px 0;
+
+}
+
+
+/* =========================================
+   ALLOCATION
+========================================= */
+
+.allocation {
+
+    border-radius: 12px;
+
+    padding: 20px;
+
+    border: 1px solid;
+
+}
+
+
+.success-box {
+
+    background: #eefaf3;
+
+    border-color: #b9dfc7;
+
+}
+
+
+.warning-box {
+
+    background: #fff9e9;
+
+    border-color: #ecd59a;
+
+}
+
+
+.danger-box {
+
+    background: #fff0f0;
+
+    border:
+        1px solid #e5baba;
+
+    border-radius: 12px;
+
+    padding: 20px;
+
+}
+
+
+/* =========================================
+   ALLOCATION TITLE
+========================================= */
+
+.allocation-title {
+
+    display: flex;
+
+    gap: 14px;
+
+    align-items: center;
+
+}
+
+
+.allocation-title h3 {
+
+    margin:
+        0 0 4px;
+
+    color: #24364a;
+
+}
+
+
+.allocation-title p {
+
+    margin: 0;
+
+    color: #667384;
+
+}
+
+
+.big-check {
+
+    width: 42px;
+
+    height: 42px;
+
+    display: grid;
+
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: white;
+
+    font-size: 22px;
+
+    font-weight: 900;
+
+}
+
+
+/* =========================================
+   ALLOCATION INFORMATION
+========================================= */
+
+.allocation-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+
+    margin-top: 20px;
+
+}
+
+
+.allocation-grid > div {
+
+    background:
+        rgba(255, 255, 255, 0.75);
+
+    padding: 14px;
+
+    border-radius: 8px;
+
+}
+
+
+.allocation-grid span {
+
+    display: block;
+
+    color: #65748b;
+
+    font-size: 13px;
+
+    margin-bottom: 7px;
+
+}
+
+
+.allocation-grid strong {
+
+    font-size: 17px;
+
+    color: #1c3147;
+
+}
+
+
+.score {
+
+    font-size: 22px !important;
+
+}
+
+
+.message {
+
+    margin:
+        18px 0 0;
+
+    font-weight: 600;
+
+    line-height: 1.5;
+
+}
+
+
+/* =========================================
+   WAITING LIST
+========================================= */
+
+.waiting-id {
+
+    margin-top: 18px;
+
+    padding: 13px;
+
+    background: white;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+}
+
+
+/* =========================================
+   LOADING
+========================================= */
+
+.loading {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 18px;
+
+    color: #536274;
+
+}
+
+
+.processing {
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    min-height: 180px;
+
+    text-align: center;
+
+    color: #536274;
+
+}
+
+
+.processing h2 {
+
+    margin:
+        10px 0 5px;
+
+    color: #123b5d;
+
+}
+
+
+.processing p {
+
+    margin: 0;
+
+}
+
+
+/* =========================================
+   SPINNER
+========================================= */
+
+.spinner {
+
+    width: 20px;
+
+    height: 20px;
+
+    border:
+        3px solid #d8e4ed;
+
+    border-top-color:
+        #176b91;
+
+    border-radius: 50%;
+
+    animation:
+        spin 0.8s linear infinite;
+
+}
+
+
+.spinner.large {
+
+    width: 42px;
+
+    height: 42px;
+
+    border-width: 4px;
+
+}
+
+
+@keyframes spin {
+
+    to {
+
+        transform:
+            rotate(360deg);
+
+    }
+
+}
+
+
+.hidden {
+
+    display: none !important;
+
+}
+
+
+/* =========================================
+   TABLE
+========================================= */
+
+.table-wrap {
+
+    overflow-x: auto;
+
+}
+
+
+table {
+
+    width: 100%;
+
+    border-collapse:
+        collapse;
+
+    min-width: 650px;
+
+}
+
+
+th,
+td {
+
+    padding:
+        12px 13px;
+
+    text-align: left;
+
+    border-bottom:
+        1px solid #e8edf2;
+
+    font-size: 14px;
+
+}
+
+
+th {
+
+    background: #f5f8fb;
+
+    color: #40546a;
+
+    font-weight: 700;
+
+}
+
+
+tbody tr:hover {
+
+    background: #f9fbfd;
+
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+footer {
+
+    text-align: center;
+
+    padding: 20px;
+
+    color: #718096;
+
+    font-size: 13px;
+
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+
+    .dashboard-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+    }
+
+
+    .requirement-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+    }
+
+
+    .allocation-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+    }
+
+
+    .form-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+}
+
+
+@media (max-width: 600px) {
+
+
+    .topbar {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+    }
+
+
+    .dashboard-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .requirement-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .allocation-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .container {
+
+        width: 94%;
+
+    }
+
+
+    .card {
+
+        padding: 18px;
+
+    }
+
+
+    .result-header {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+    }
+
+
+}

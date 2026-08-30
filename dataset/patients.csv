@@ -1,0 +1,7 @@
+patient_id,patient_name,age,gender,diagnosis
+P001,Patient_001,45,Male,Pneumonia
+P002,Patient_002,62,Female,Cardiac Condition
+P003,Patient_003,35,Male,Fracture
+P004,Patient_004,71,Female,Respiratory Infection
+P005,Patient_005,28,Male,Appendicitis
+P006,Patient_006,55,Female,Diabetes
