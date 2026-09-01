@@ -1,32 +1,31 @@
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from typing import Optional
 
 from services.allocator import allocate_bed
+from services.forecasting_model import forecast_occupancy
 
+
+# =========================================================
+# FASTAPI APPLICATION
+# =========================================================
 
 app = FastAPI(
     title="Hospital Resource Allocation API",
-    description="API for hospital bed and resource allocation",
-    version="1.0"
+    description="Hospital bed allocation and occupancy forecasting API",
+    version="1.0.0"
 )
 
 
-# ==========================================
+# =========================================================
 # REQUEST MODEL
-# ==========================================
+# =========================================================
 
 class AllocationRequest(BaseModel):
 
-    ward_type: str = Field(
-        ...,
-        description="Required ward type"
-    )
+    ward_type: str
 
-    stay_days: int = Field(
-        1,
-        ge=1,
-        description="Expected patient stay in days"
-    )
+    stay_days: int
 
     oxygen: bool = False
 
@@ -34,52 +33,118 @@ class AllocationRequest(BaseModel):
 
     isolation: bool = False
 
-    patient_id: str = "P999"
+    patient_id: Optional[str] = "P999"
 
 
-# ==========================================
-# HOME
-# ==========================================
+# =========================================================
+# ROOT
+# =========================================================
 
 @app.get("/")
 def root():
 
     return {
-        "message": "Hospital Resource Allocation API",
-        "status": "running"
+        "status": "running",
+        "service": "Hospital Resource Allocation API",
+        "version": "1.0.0"
     }
 
 
-# ==========================================
-# ALLOCATE BED
-# ==========================================
+# =========================================================
+# HEALTH CHECK
+# =========================================================
+
+@app.get("/health")
+def health():
+
+    return {
+        "status": "healthy"
+    }
+
+
+# =========================================================
+# BED ALLOCATION
+# =========================================================
 
 @app.post("/allocate")
-def allocate(request: AllocationRequest):
+def allocate(
+    requirements: AllocationRequest
+):
 
-    requirements = {
-        "ward_type": request.ward_type.strip(),
+    data = requirements.dict()
 
-        "stay_days": request.stay_days,
-
-        "oxygen": request.oxygen,
-
-        "ventilator": request.ventilator,
-
-        "isolation": request.isolation,
-
-        "patient_id": request.patient_id
-    }
-
-    print("\n==============================")
-    print("FASTAPI ALLOCATION REQUEST")
-    print("==============================")
-    print(requirements)
-
-    result = allocate_bed(requirements)
-
-    print("\nALLOCATION RESULT")
-    print(result)
-    print("==============================\n")
+    result = allocate_bed(
+        data
+    )
 
     return result
+
+
+# =========================================================
+# OCCUPANCY FORECAST
+# =========================================================
+
+@app.get("/forecast")
+def forecast(
+    days: int = 7
+):
+
+    if days < 1:
+
+        days = 1
+
+    if days > 30:
+
+        days = 30
+
+    try:
+
+        result = forecast_occupancy(
+            days
+        )
+
+        return {
+
+            "status":
+                "success",
+
+            "forecast_days":
+                days,
+
+            "forecast":
+                result
+
+        }
+
+    except Exception as e:
+
+        return {
+
+            "status":
+                "error",
+
+            "message":
+                str(e)
+
+        }
+
+
+# =========================================================
+# RUN DIRECTLY
+# =========================================================
+
+if __name__ == "__main__":
+
+    import uvicorn
+
+    uvicorn.run(
+
+        "api:app",
+
+        host="127.0.0.1",
+
+        port=8000,
+
+        reload=True
+
+    )

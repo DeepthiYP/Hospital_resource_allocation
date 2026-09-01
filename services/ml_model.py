@@ -1,287 +1,281 @@
-import re
+import os
+import pickle
+import numpy as np
+import tensorflow as tf
+
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 
-# ==========================================
-# HELPER FUNCTIONS
-# ==========================================
+# ============================================================
+# MODEL PATHS
+# ============================================================
 
-def clean_text(text):
-    return " ".join(
-        str(text).replace("\n", " ").split()
-    )
+MODEL_FILE = "models/bilstm_nlp_model.keras"
+
+TOKENIZER_FILE = "models/nlp_tokenizer.pkl"
+
+LABEL_INFO_FILE = "models/nlp_label_info.pkl"
 
 
-def find_value(text, patterns):
-    """
-    Finds a value after one of the supplied labels.
-    """
+# ============================================================
+# LOAD MODEL
+# ============================================================
 
-    for pattern in patterns:
+model = None
+tokenizer = None
+label_info = None
 
-        match = re.search(
-            pattern,
-            text,
-            re.IGNORECASE
+
+def load_model():
+
+    global model
+    global tokenizer
+    global label_info
+
+    if model is None:
+
+        if not os.path.exists(MODEL_FILE):
+
+            raise FileNotFoundError(
+                f"BiLSTM model not found: {MODEL_FILE}\n"
+                "Run train_nlp_model.py first."
+            )
+
+        model = tf.keras.models.load_model(
+            MODEL_FILE
         )
 
-        if match:
-            return match.group(1).strip()
+    if tokenizer is None:
 
-    return None
+        if not os.path.exists(TOKENIZER_FILE):
+
+            raise FileNotFoundError(
+                f"Tokenizer not found: {TOKENIZER_FILE}"
+            )
+
+        with open(
+            TOKENIZER_FILE,
+            "rb"
+        ) as file:
+
+            tokenizer = pickle.load(file)
+
+    if label_info is None:
+
+        if not os.path.exists(LABEL_INFO_FILE):
+
+            raise FileNotFoundError(
+                f"Label information not found: "
+                f"{LABEL_INFO_FILE}"
+            )
+
+        with open(
+            LABEL_INFO_FILE,
+            "rb"
+        ) as file:
+
+            label_info = pickle.load(file)
+
+    return model, tokenizer, label_info
 
 
-def contains_required(text, words):
+# ============================================================
+# YES / NO CONVERSION
+# ============================================================
+
+def yes_no(value):
+
     """
-    Returns True when the document contains
-    a phrase indicating that a resource is required.
+    Converts model probability into
+    Yes / No.
     """
 
-    text = text.lower()
+    if isinstance(value, (list, np.ndarray)):
 
-    for word in words:
-
-        if word in text:
-            return True
-
-    return False
-
-
-# ==========================================
-# WARD EXTRACTION
-# ==========================================
-
-def extract_ward(text):
-
-    # First look for explicit ward labels.
-
-    match = re.search(
-        r"ward\s*(?:required|type)?\s*[:\-]?\s*"
-        r"(icu|general|isolation|private)",
-        text,
-        re.IGNORECASE
-    )
-
-    if match:
-        return match.group(1).strip().title()
-
-    # Fallback keyword detection.
-
-    text_lower = text.lower()
-
-    if "icu" in text_lower:
-        return "ICU"
-
-    if "isolation ward" in text_lower:
-        return "Isolation"
-
-    if "private ward" in text_lower:
-        return "Private"
-
-    return "General"
-
-
-# ==========================================
-# OXYGEN
-# ==========================================
-
-def extract_oxygen(text):
-
-    text_lower = text.lower()
-
-    # Explicit negative statements first.
-
-    negative_patterns = [
-        "oxygen support: not required",
-        "oxygen: no",
-        "oxygen required: no",
-        "oxygen support no"
-    ]
-
-    for phrase in negative_patterns:
-
-        if phrase in text_lower:
-            return False
-
-    positive_patterns = [
-        "oxygen support: required",
-        "oxygen: yes",
-        "oxygen required: yes",
-        "oxygen support required",
-        "oxygen is required",
-        "oxygen required"
-    ]
-
-    for phrase in positive_patterns:
-
-        if phrase in text_lower:
-            return True
-
-    return False
-
-
-# ==========================================
-# VENTILATOR
-# ==========================================
-
-def extract_ventilator(text):
-
-    text_lower = text.lower()
-
-    negative_patterns = [
-        "ventilator support: not required",
-        "ventilator: no",
-        "ventilator required: no",
-        "ventilator support no"
-    ]
-
-    for phrase in negative_patterns:
-
-        if phrase in text_lower:
-            return False
-
-    positive_patterns = [
-        "ventilator support: required",
-        "ventilator: yes",
-        "ventilator required: yes",
-        "ventilator support required",
-        "ventilator is required",
-        "ventilator required"
-    ]
-
-    for phrase in positive_patterns:
-
-        if phrase in text_lower:
-            return True
-
-    return False
-
-
-# ==========================================
-# ISOLATION
-# ==========================================
-
-def extract_isolation(text):
-
-    text_lower = text.lower()
-
-    negative_patterns = [
-        "isolation: no",
-        "isolation required: no",
-        "isolation support: no",
-        "isolation: not required",
-        "isolation not required"
-    ]
-
-    for phrase in negative_patterns:
-
-        if phrase in text_lower:
-            return False
-
-    positive_patterns = [
-        "isolation: yes",
-        "isolation required: yes",
-        "isolation support: yes",
-        "isolation: required",
-        "isolation required",
-        "isolation is required",
-        "requires isolation"
-    ]
-
-    for phrase in positive_patterns:
-
-        if phrase in text_lower:
-            return True
-
-    return False
-
-
-# ==========================================
-# STAY DURATION
-# ==========================================
-
-def extract_stay_days(text):
-
-    patterns = [
-
-        r"expected\s+length\s+of\s+stay\s*[:\-]?\s*(\d+)\s*days?",
-
-        r"length\s+of\s+stay\s*[:\-]?\s*(\d+)\s*days?",
-
-        r"expected\s+stay\s*[:\-]?\s*(\d+)\s*days?",
-
-        r"stay\s+duration\s*[:\-]?\s*(\d+)\s*days?",
-
-        r"stay\s*[:\-]?\s*(\d+)\s*days?",
-
-        r"(\d+)\s*days?\s*(?:of)?\s*(?:hospital|inpatient)\s*stay"
-    ]
-
-    for pattern in patterns:
-
-        match = re.search(
-            pattern,
-            text,
-            re.IGNORECASE
+        value = float(
+            np.asarray(value).flatten()[0]
         )
 
-        if match:
+    else:
 
-            days = int(match.group(1))
+        value = float(value)
 
-            if days >= 1:
-                return days
-
-    return 1
+    return "Yes" if value >= 0.5 else "No"
 
 
-# ==========================================
-# PATIENT ID
-# ==========================================
-
-def extract_patient_id(text):
-
-    match = re.search(
-        r"patient\s*(?:id|ID)\s*[:\-]?\s*([A-Za-z0-9\-]+)",
-        text,
-        re.IGNORECASE
-    )
-
-    if match:
-        return match.group(1)
-
-    return "P999"
-
-
-# ==========================================
-# MAIN DOCUMENT ANALYSIS
-# ==========================================
+# ============================================================
+# PREDICT PATIENT REQUIREMENTS
+# ============================================================
 
 def predict_requirements(text):
 
-    text = clean_text(text)
+    if not text or not str(text).strip():
+
+        raise ValueError(
+            "Document text is empty."
+        )
+
+    model, tokenizer, label_info = (
+        load_model()
+    )
+
+    max_sequence_length = label_info[
+        "max_sequence_length"
+    ]
+
+    ward_types = label_info[
+        "ward_types"
+    ]
+
+    # --------------------------------------------------------
+    # Convert document to sequence
+    # --------------------------------------------------------
+
+    sequence = tokenizer.texts_to_sequences(
+        [str(text)]
+    )
+
+    padded = pad_sequences(
+        sequence,
+        maxlen=max_sequence_length,
+        padding="post",
+        truncating="post"
+    )
+
+    # --------------------------------------------------------
+    # BiLSTM prediction
+    # --------------------------------------------------------
+
+    predictions = model.predict(
+        padded,
+        verbose=0
+    )
+
+    (
+        ward_prediction,
+        oxygen_prediction,
+        ventilator_prediction,
+        isolation_prediction,
+        stay_prediction
+    ) = predictions
+
+    # --------------------------------------------------------
+    # Ward
+    # --------------------------------------------------------
+
+    ward_index = int(
+        np.argmax(
+            ward_prediction[0]
+        )
+    )
+
+    if ward_index >= len(ward_types):
+
+        ward_index = 0
+
+    predicted_ward = ward_types[
+        ward_index
+    ]
+
+    # --------------------------------------------------------
+    # Oxygen
+    # --------------------------------------------------------
+
+    oxygen = yes_no(
+        oxygen_prediction[0]
+    )
+
+    # --------------------------------------------------------
+    # Ventilator
+    # --------------------------------------------------------
+
+    ventilator = yes_no(
+        ventilator_prediction[0]
+    )
+
+    # --------------------------------------------------------
+    # Isolation
+    # --------------------------------------------------------
+
+    isolation = yes_no(
+        isolation_prediction[0]
+    )
+
+    # --------------------------------------------------------
+    # Stay duration
+    # --------------------------------------------------------
+
+    stay_days = float(
+        stay_prediction[0][0]
+    )
+
+    stay_days = max(
+        1,
+        round(stay_days)
+    )
+
+    # Limit unrealistic values
+    stay_days = min(
+        stay_days,
+        60
+    )
+
+    # --------------------------------------------------------
+    # Return requirements
+    # --------------------------------------------------------
 
     requirements = {
 
-        "patient_id":
-            extract_patient_id(text),
-
         "ward_type":
-            extract_ward(text),
-
-        "stay_days":
-            extract_stay_days(text),
+            predicted_ward,
 
         "oxygen":
-            extract_oxygen(text),
+            oxygen == "Yes",
 
         "ventilator":
-            extract_ventilator(text),
+            ventilator == "Yes",
 
         "isolation":
-            extract_isolation(text)
+            isolation == "Yes",
+
+        "stay_days":
+            int(stay_days)
     }
 
-    print("\nMODEL/DOCUMENT ANALYSIS")
-    print(requirements)
-
     return requirements
+
+
+# ============================================================
+# TEST
+# ============================================================
+
+if __name__ == "__main__":
+
+    print("=" * 60)
+
+    print(
+        "TESTING BiLSTM NLP MODEL"
+    )
+
+    print("=" * 60)
+
+    test_document = (
+        "Patient requires ICU admission "
+        "with oxygen and ventilator support "
+        "for 5 days."
+    )
+
+    result = predict_requirements(
+        test_document
+    )
+
+    print("\nDocument:")
+    print(test_document)
+
+    print("\nPredicted requirements:")
+
+    for key, value in result.items():
+
+        print(
+            f"{key}: {value}"
+        )

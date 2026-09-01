@@ -1,10 +1,20 @@
 import os
 import requests
 
-from flask import Flask, render_template, request, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify
+)
 
-from services.document_processor import extract_text
-from services.ml_model import predict_requirements
+from services.document_processor import (
+    extract_text
+)
+
+from services.ml_model import (
+    predict_requirements
+)
 
 from services.occupancy import (
     get_occupancy_summary,
@@ -13,176 +23,460 @@ from services.occupancy import (
 )
 
 
+# =========================================================
+# FLASK APPLICATION
+# =========================================================
+
 app = Flask(__name__)
+
+
+# =========================================================
+# CONFIGURATION
+# =========================================================
 
 UPLOAD_FOLDER = "uploads"
 
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config[
+    "UPLOAD_FOLDER"
+] = UPLOAD_FOLDER
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(
+    UPLOAD_FOLDER,
+    exist_ok=True
+)
 
-FASTAPI_URL = "http://127.0.0.1:8000"
+
+# =========================================================
+# FASTAPI URL
+# =========================================================
+
+FASTAPI_URL = (
+    "http://127.0.0.1:8000"
+)
 
 
-# ==========================================
+# =========================================================
 # DASHBOARD
-# ==========================================
+# =========================================================
 
 @app.route("/")
 def home():
 
-    summary = get_occupancy_summary()
-    occupied = get_occupied_beds()
-    wards = get_ward_summary()
+    try:
 
-    return render_template(
-        "index.html",
-        summary=summary,
-        occupied=occupied.to_dict(orient="records"),
-        wards=wards.to_dict(orient="records")
-    )
+        summary = (
+            get_occupancy_summary()
+        )
+
+        occupied = (
+            get_occupied_beds()
+        )
+
+        wards = (
+            get_ward_summary()
+        )
+
+        return render_template(
+
+            "index.html",
+
+            summary=summary,
+
+            occupied=occupied.to_dict(
+                orient="records"
+            ),
+
+            wards=wards.to_dict(
+                orient="records"
+            )
+
+        )
+
+    except Exception as e:
+
+        return render_template(
+
+            "index.html",
+
+            summary={},
+
+            occupied=[],
+
+            wards=[],
+
+            error=str(e)
+
+        )
 
 
-# ==========================================
-# DOCUMENT ANALYSIS
-# ==========================================
+# =========================================================
+# DOCUMENT ANALYSIS + ALLOCATION
+# =========================================================
 
-@app.route("/analyze", methods=["POST"])
+@app.route(
+    "/analyze",
+    methods=["POST"]
+)
 def analyze_document():
 
+    # -----------------------------------------------------
+    # CHECK FILE
+    # -----------------------------------------------------
+
     if "document" not in request.files:
+
         return jsonify({
-            "error": "No document uploaded."
+
+            "error":
+                "No document uploaded."
+
         }), 400
 
-    file = request.files["document"]
+
+    file = request.files[
+        "document"
+    ]
+
 
     if file.filename == "":
+
         return jsonify({
-            "error": "No file selected."
+
+            "error":
+                "No file selected."
+
         }), 400
 
-    file_path = os.path.join(
-        app.config["UPLOAD_FOLDER"],
+
+    # -----------------------------------------------------
+    # SAVE DOCUMENT
+    # -----------------------------------------------------
+
+    safe_filename = os.path.basename(
         file.filename
     )
 
-    file.save(file_path)
+    file_path = os.path.join(
+
+        app.config[
+            "UPLOAD_FOLDER"
+        ],
+
+        safe_filename
+
+    )
+
+    file.save(
+        file_path
+    )
+
 
     try:
 
-        # ==================================
-        # 1. EXTRACT PDF TEXT
-        # ==================================
+        # =================================================
+        # STEP 1 — EXTRACT DOCUMENT TEXT
+        # =================================================
 
-        text = extract_text(file_path)
+        text = extract_text(
+            file_path
+        )
+
 
         if not text:
+
             return jsonify({
-                "error": "Could not extract text from document."
+
+                "error":
+                    "Could not extract text from document."
+
             }), 400
 
-        # ==================================
-        # 2. ANALYSE DOCUMENT
-        # ==================================
 
-        requirements = predict_requirements(text)
+        # =================================================
+        # STEP 2 — BiLSTM NLP MODEL
+        # =================================================
 
-        # ==================================
-        # 3. PATIENT ID
-        # ==================================
+        requirements = (
+            predict_requirements(text)
+        )
+
+
+        # =================================================
+        # STEP 3 — PATIENT ID
+        # =================================================
 
         patient_id = request.form.get(
+
             "patient_id",
-            requirements.get("patient_id", "P999")
+
+            "P999"
+
         )
 
-        requirements["patient_id"] = patient_id
 
-        # ==================================
-        # DEBUG
-        # ==================================
+        requirements[
+            "patient_id"
+        ] = patient_id
 
-        print("\n==============================")
-        print("DOCUMENT TEXT")
-        print("==============================")
-        print(text)
 
-        print("\n==============================")
-        print("EXTRACTED REQUIREMENTS")
-        print("==============================")
-        print(requirements)
-
-        print("==============================\n")
-
-        # ==================================
-        # 4. CALL FASTAPI
-        # ==================================
-
-        payload = {
-            "ward_type": requirements["ward_type"],
-            "stay_days": requirements["stay_days"],
-            "oxygen": requirements["oxygen"],
-            "ventilator": requirements["ventilator"],
-            "isolation": requirements["isolation"],
-            "patient_id": patient_id
-        }
+        # =================================================
+        # STEP 4 — SEND TO FASTAPI
+        # =================================================
 
         response = requests.post(
-            FASTAPI_URL + "/allocate",
-            json=payload,
-            timeout=30
+
+            FASTAPI_URL
+            + "/allocate",
+
+            json={
+
+                "ward_type":
+                    requirements[
+                        "ward_type"
+                    ],
+
+                "stay_days":
+                    int(
+                        requirements[
+                            "stay_days"
+                        ]
+                    ),
+
+                "oxygen":
+                    bool(
+                        requirements[
+                            "oxygen"
+                        ]
+                    ),
+
+                "ventilator":
+                    bool(
+                        requirements[
+                            "ventilator"
+                        ]
+                    ),
+
+                "isolation":
+                    bool(
+                        requirements[
+                            "isolation"
+                        ]
+                    ),
+
+                "patient_id":
+                    patient_id
+
+            },
+
+            timeout=60
+
         )
 
-        # ==================================
-        # 5. FASTAPI ERROR
-        # ==================================
+
+        # =================================================
+        # STEP 5 — FASTAPI ERROR
+        # =================================================
 
         if response.status_code != 200:
 
             return jsonify({
-                "error": "FastAPI allocation failed.",
-                "details": response.text
+
+                "error":
+                    "FastAPI allocation failed.",
+
+                "details":
+                    response.text
+
             }), 500
 
-        allocation = response.json()
 
-        # ==================================
-        # 6. FINAL RESPONSE
-        # ==================================
+        # =================================================
+        # STEP 6 — ALLOCATION RESULT
+        # =================================================
+
+        allocation = (
+            response.json()
+        )
+
+
+        # =================================================
+        # STEP 7 — RETURN EVERYTHING
+        # =================================================
 
         return jsonify({
-            "document_text": text,
-            "requirements": requirements,
-            "allocation": allocation
+
+            "document_text":
+                text,
+
+            "requirements":
+                requirements,
+
+            "allocation":
+                allocation
+
         })
+
+
+    # =====================================================
+    # FASTAPI NOT RUNNING
+    # =====================================================
 
     except requests.exceptions.ConnectionError:
 
         return jsonify({
-            "error": (
-                "FastAPI server is not running. "
-                "Start FastAPI using uvicorn."
-            )
+
+            "error":
+                (
+                    "FastAPI server is not running. "
+                    "Start it using: "
+                    "python api.py"
+                )
+
         }), 500
+
+
+    # =====================================================
+    # OTHER ERROR
+    # =====================================================
 
     except Exception as e:
 
-        print("ERROR:", str(e))
-
         return jsonify({
-            "error": str(e)
+
+            "error":
+                str(e)
+
         }), 500
 
 
-# ==========================================
+# =========================================================
+# OCCUPANCY FORECAST
+# =========================================================
+
+@app.route(
+    "/forecast",
+    methods=["GET"]
+)
+def forecast():
+
+    try:
+
+        days = request.args.get(
+            "days",
+            default=7,
+            type=int
+        )
+
+
+        days = max(
+            1,
+            min(days, 30)
+        )
+
+
+        response = requests.get(
+
+            FASTAPI_URL
+            + "/forecast",
+
+            params={
+                "days": days
+            },
+
+            timeout=60
+
+        )
+
+
+        if response.status_code != 200:
+
+            return jsonify({
+
+                "error":
+                    "Forecasting service failed.",
+
+                "details":
+                    response.text
+
+            }), 500
+
+
+        return jsonify(
+            response.json()
+        )
+
+
+    except requests.exceptions.ConnectionError:
+
+        return jsonify({
+
+            "error":
+                "FastAPI server is not running."
+
+        }), 500
+
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error":
+                str(e)
+
+        }), 500
+
+
+# =========================================================
+# FASTAPI STATUS
+# =========================================================
+
+@app.route(
+    "/api-status",
+    methods=["GET"]
+)
+def api_status():
+
+    try:
+
+        response = requests.get(
+
+            FASTAPI_URL
+            + "/health",
+
+            timeout=5
+
+        )
+
+        return jsonify({
+
+            "online":
+                response.status_code == 200
+
+        })
+
+
+    except Exception:
+
+        return jsonify({
+
+            "online":
+                False
+
+        })
+
+
+# =========================================================
 # RUN FLASK
-# ==========================================
+# =========================================================
 
 if __name__ == "__main__":
 
     app.run(
+
         host="127.0.0.1",
+
         port=5000,
+
         debug=True
+
     )

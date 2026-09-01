@@ -1,0 +1,9 @@
+{
+    "sequence_length": 14,
+    "wards": [
+        "General",
+        "ICU",
+        "Isolation",
+        "Private"
+    ]
+}
